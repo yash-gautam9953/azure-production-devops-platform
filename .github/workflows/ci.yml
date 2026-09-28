@@ -83,3 +83,21 @@ jobs:
               ghcr.io/yash-gautam9953/azure-production-devops-platform:latest
 
             docker image prune -f
+
+      - name: Verify deployment
+        run: |
+          echo "Checking application health..."
+
+          for i in {1..12}; do
+            if curl -fsS http://${{ secrets.AZURE_VM_HOST }}/health; then
+              echo ""
+              echo "Deployment successful!"
+              exit 0
+            fi
+
+            echo "Application not ready yet. Retrying..."
+            sleep 5
+          done
+
+          echo "Deployment health check failed!"
+          exit 1
