@@ -63,3 +63,23 @@ jobs:
         run: |
           docker push $IMAGE_NAME:${GITHUB_SHA}
           docker push $IMAGE_NAME:latest
+
+            - name: Deploy to Azure VM
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.AZURE_VM_HOST }}
+          username: ${{ secrets.AZURE_VM_USER }}
+          key: ${{ secrets.AZURE_VM_SSH_KEY }}
+          script: |
+            docker pull ghcr.io/yash-gautam9953/azure-production-devops-platform:latest
+
+            docker stop azureops-app || true
+            docker rm azureops-app || true
+
+            docker run -d \
+              --name azureops-app \
+              -p 80:3000 \
+              --restart unless-stopped \
+              ghcr.io/yash-gautam9953/azure-production-devops-platform:latest
+
+            docker image prune -f
